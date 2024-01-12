@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEditor.Experimental.GraphView;
 
 namespace _2023_GC_A2_Partiel_POO.Level_2
 {
@@ -28,6 +29,10 @@ namespace _2023_GC_A2_Partiel_POO.Level_2
         /// </summary>
         TYPE _baseType;
 
+
+
+        public double CriticalChance { get; set; }
+
         public Character(int baseHealth, int baseAttack, int baseDefense, int baseSpeed, TYPE baseType)
         {
             _baseHealth = baseHealth;
@@ -35,6 +40,8 @@ namespace _2023_GC_A2_Partiel_POO.Level_2
             _baseDefense = baseDefense;
             _baseSpeed = baseSpeed;
             _baseType = baseType;
+
+            CurrentHealth = MaxHealth;
         }
         /// <summary>
         /// HP actuel du personnage
@@ -44,43 +51,20 @@ namespace _2023_GC_A2_Partiel_POO.Level_2
         /// <summary>
         /// HPMax, prendre en compte base et equipement potentiel
         /// </summary>
-        public int MaxHealth
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int MaxHealth => _baseHealth + (CurrentEquipment?.BonusHealth ?? 0);
         /// <summary>
         /// ATK, prendre en compte base et equipement potentiel
         /// </summary>
-        public int Attack
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int Attack => _baseAttack + (CurrentEquipment?.BonusAttack ?? 0);
         /// <summary>
         /// DEF, prendre en compte base et equipement potentiel
         /// </summary>
-        public int Defense
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int Defense => _baseDefense + (CurrentEquipment?.BonusDefense ?? 0);
+
         /// <summary>
         /// SPE, prendre en compte base et equipement potentiel
         /// </summary>
-        public int Speed
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public int Speed => _baseSpeed + (CurrentEquipment?.BonusSpeed ?? 0);
         /// <summary>
         /// Equipement unique du personnage
         /// </summary>
@@ -90,7 +74,11 @@ namespace _2023_GC_A2_Partiel_POO.Level_2
         /// </summary>
         public StatusEffect CurrentStatus { get; private set; }
 
-        public bool IsAlive => throw new NotImplementedException();
+        public bool IsAlive
+        {
+            get { return CurrentHealth >= 0; }
+        }
+        
 
 
         /// <summary>
@@ -102,8 +90,47 @@ namespace _2023_GC_A2_Partiel_POO.Level_2
         /// <exception cref="NotImplementedException"></exception>
         public void ReceiveAttack(Skill s)
         {
-            throw new NotImplementedException();
+                       
+            int damageReceived = CalculateDamageReceived(s);
+
+            CurrentHealth -= damageReceived;
+
+            if (CurrentHealth < 0)
+            {
+                CurrentHealth = 0;
+            }
+
+            if (!IsAlive)
+            {
+                return;
+            }
+
         }
+
+        private int CalculateDamageReceived(Skill s)
+        {
+            int baseDamage = Math.Max(s.Power - Defense, 0);
+
+            if (IsCriticalHit())
+            {
+                Console.WriteLine("Critical Hit!");
+                return (int)(baseDamage * 1.5); 
+            }
+
+            return baseDamage;
+        }
+
+        private bool IsCriticalHit()
+        {
+            Random random = new Random();
+            double randomValue = random.NextDouble();
+
+            // Vérifier si le coup critique a eu lieu en comparant avec la chance critique
+            return randomValue < CriticalChance;
+        }
+
+
+
         /// <summary>
         /// Equipe un objet au personnage
         /// </summary>
@@ -111,14 +138,19 @@ namespace _2023_GC_A2_Partiel_POO.Level_2
         /// <exception cref="ArgumentNullException">Si equipement est null</exception>
         public void Equip(Equipment newEquipment)
         {
-            throw new NotImplementedException();
+            if (newEquipment == null)
+            {
+                throw new ArgumentNullException("newEquipment");
+            }
+
+            CurrentEquipment = newEquipment;
         }
         /// <summary>
         /// Desequipe l'objet en cours au personnage
         /// </summary>
         public void Unequip()
         {
-            throw new NotImplementedException();
+            CurrentEquipment = null;
         }
 
     }
